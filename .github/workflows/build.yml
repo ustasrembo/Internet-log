@@ -40,6 +40,27 @@ jobs:
           yes | "$SDKMANAGER" --licenses || true
           "$SDKMANAGER" --install "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
+      - name: Configure Java and Kotlin targets
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("extracted/InternetLog/app/build.gradle.kts")
+          s = p.read_text()
+          s = s.replace(
+              "android {",
+              '''android {
+              compileOptions {
+                  sourceCompatibility = JavaVersion.VERSION_17
+                  targetCompatibility = JavaVersion.VERSION_17
+              }
+              kotlinOptions {
+                  jvmTarget = "17"
+              }''',
+              1
+          )
+          p.write_text(s)
+          PY
+
       - name: Build APK
         run: gradle -p extracted/InternetLog assembleDebug
 
