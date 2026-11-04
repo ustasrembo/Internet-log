@@ -40,12 +40,23 @@ jobs:
           yes | "$SDKMANAGER" --licenses || true
           "$SDKMANAGER" --install "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
-      - name: Configure Java and Kotlin targets
+      
+      - name: Configure Java, Kotlin and dependencies
         run: |
           python3 - <<'PY'
           from pathlib import Path
+
           p = Path("extracted/InternetLog/app/build.gradle.kts")
           s = p.read_text()
+
+          if "androidx.core:core-ktx" not in s:
+              s += '''
+          
+          dependencies {
+              implementation("androidx.core:core-ktx:1.15.0")
+          }
+          '''
+
           s = s.replace(
               "android {",
               '''android {
@@ -58,8 +69,10 @@ jobs:
               }''',
               1
           )
+
           p.write_text(s)
           PY
+
 
       - name: Build APK
         run: gradle -p extracted/InternetLog assembleDebug
